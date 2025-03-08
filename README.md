@@ -1,66 +1,49 @@
-# atipera
+# GitHub API Client with Quarkus
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
-
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
-
-## Running the application in dev mode
-
-You can run your application in dev mode that enables live coding using:
-
-```shell script
-./gradlew quarkusDev
+## Endpoints
+```http
+GET /github/{owner}
 ```
+- Description:
+  Retrieves all non-fork repositories for a given GitHub owner along with their branch details.
+- Success Response:
+  A JSON array of repository objects containing:
+    - repositoryName
+    - ownerLogin
+    - branches (each branch includes its name and last commit sha)
+- Error Scenarios:
+  - 404 Not Found: If the GitHub user is not found.
+  - 429 Too Many Requests: If the GitHub API rate limit is exceeded.
+  - 500 Internal Server Error: For any other unexpected errors.
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+## Use Cases & Scenarios
 
-## Packaging and running the application
+- Happy Path:
+  When a valid GitHub owner exists and has non-fork repositories, the endpoint returns detailed repository and branch data.
+- User Not Found:
+  The API responds with a 404 error if the specified user does not exist.
+- Rate Limiting:
+  The API responds with a 429 error when GitHub's API rate limit is exceeded.
+- Error Handling:
+  Other errors result in a 500 error with an appropriate message.
 
-The application can be packaged using:
+## Running Tests
 
-```shell script
-./gradlew build
-```
+This project uses Testcontainers for integration testing. The tests start a WireMock container to simulate GitHub API responses, ensuring isolated and consistent test runs.
 
-It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `build/quarkus-app/lib/` directory.
+**Important❗️: Docker must be running on your system for the tests to work, as the test setup relies on starting Docker containers.**
 
-The application is now runnable using `java -jar build/quarkus-app/quarkus-run.jar`.
+## Build and Test
 
-If you want to build an _über-jar_, execute the following command:
+Run the following command to build the project and execute tests:
 
-```shell script
-./gradlew build -Dquarkus.package.jar.type=uber-jar
-```
+    ./gradlew quarkusBuild
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar build/*-runner.jar`.
+This command builds the project and runs tests that leverage the Quarkus testing framework along with Testcontainers.
 
-## Creating a native executable
+## Additional Notes
 
-You can create a native executable using:
-
-```shell script
-./gradlew build -Dquarkus.native.enabled=true
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./build/atipera-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/gradle-tooling>.
-
-## Related Guides
-
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-
-## Provided Code
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+- WireMock Integration:
+  A custom test resource (WireMockTestResource) is used to dynamically start a WireMock container. This container intercepts REST calls to simulate GitHub responses during tests.
+- Dynamic Configuration:
+  The application properties for the GitHub REST client are overridden at test runtime with the dynamically mapped WireMock URL.
